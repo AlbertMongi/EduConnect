@@ -1,4 +1,4 @@
-package com.example.educonnect_parent_app
+package com.evmak.nbceduconnect
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

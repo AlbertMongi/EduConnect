@@ -1,9 +1,11 @@
+// import 'dart:convert';
 // import 'package:educonnect_parent_app/constant/app_constant.dart';
 // import 'package:educonnect_parent_app/services/auth_service.dart';
 // import 'package:flutter/material.dart';
 // import 'package:vibration/vibration.dart';
 // import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 // import 'package:local_auth/local_auth.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 // class LoginScreen extends StatefulWidget {
 //   const LoginScreen({super.key});
@@ -33,13 +35,51 @@
 //         AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
 //     _passwordControllerShake =
 //         AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+//     _loadSavedCredentials(); // Load saved credentials on initialization
 //   }
 
 //   @override
 //   void dispose() {
 //     _idControllerShake.dispose();
 //     _passwordControllerShake.dispose();
+//     idController.dispose();
+//     passwordController.dispose();
 //     super.dispose();
+//   }
+
+//   // Load saved email and password from SharedPreferences
+//   Future<void> _loadSavedCredentials() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final String? savedEmail = prefs.getString('email');
+//     final String? savedPassword = prefs.getString('password');
+
+//     if (mounted) {
+//       setState(() {
+//         if (savedEmail != null && savedEmail.isNotEmpty) {
+//           idController.text = savedEmail;
+//         }
+//         if (savedPassword != null && savedPassword.isNotEmpty) {
+//           passwordController.text = savedPassword;
+//         }
+//       });
+//     }
+//   }
+
+//   // Save email and password to SharedPreferences
+//   Future<void> _saveCredentials(String email, String password) async {
+//     final prefs = await SharedPreferences.getInstance();
+//     // WARNING: Storing passwords in SharedPreferences is insecure.
+//     // For production, use flutter_secure_storage instead.
+//     await prefs.setString('email', email);
+//     await prefs.setString('password', password);
+//     // Update user_data for compatibility with AccountScreen
+//     final userData = {
+//       'email': email,
+//       'password': password,
+//       // Preserve other fields if they exist
+//       ...?jsonDecode(prefs.getString('user_data') ?? '{}'),
+//     };
+//     await prefs.setString('user_data', jsonEncode(userData));
 //   }
 
 //   void _showLoadingDialog() {
@@ -74,6 +114,21 @@
 //         return;
 //       }
 
+//       // Get saved credentials
+//       final prefs = await SharedPreferences.getInstance();
+//       final String? savedEmail = prefs.getString('email');
+//       final String? savedPassword = prefs.getString('password');
+
+//       if (savedEmail == null || savedPassword == null || savedEmail.isEmpty || savedPassword.isEmpty) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text("No saved credentials found. Please log in with email and password first."),
+//             backgroundColor: Colors.red,
+//           ),
+//         );
+//         return;
+//       }
+
 //       bool authenticated = await auth.authenticate(
 //         localizedReason: 'Use your fingerprint to log in',
 //         options: const AuthenticationOptions(
@@ -82,11 +137,22 @@
 //         ),
 //       );
 
-//       if (authenticated) {
+//       if (authenticated && mounted) {
 //         _showLoadingDialog();
-//         await Future.delayed(const Duration(seconds: 1));
+//         // Use saved credentials to authenticate with AuthService
+//         final success = await AuthService.login(savedEmail, savedPassword);
 //         _hideLoadingDialog();
-//         Navigator.pushReplacementNamed(context, '/home');
+
+//         if (success) {
+//           Navigator.pushReplacementNamed(context, '/home');
+//         } else {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             const SnackBar(
+//               content: Text("Biometric login failed. Please check your credentials or try manual login."),
+//               backgroundColor: Colors.red,
+//             ),
+//           );
+//         }
 //       } else {
 //         ScaffoldMessenger.of(context).showSnackBar(
 //           const SnackBar(
@@ -96,9 +162,10 @@
 //         );
 //       }
 //     } catch (e) {
+//       _hideLoadingDialog();
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(
-//           content: Text("Error: ${e.toString()}"),
+//           content: Text("Error during biometric login: $e"),
 //           backgroundColor: Colors.red,
 //         ),
 //       );
@@ -158,7 +225,7 @@
 //                     offset: Offset(_idControllerShake.value * 10, 0),
 //                     child: TextField(
 //                       controller: idController,
-//                       keyboardType: TextInputType.text,
+//                       keyboardType: TextInputType.emailAddress,
 //                       decoration: InputDecoration(
 //                         hintText: 'example@email.com',
 //                         prefixIcon: const Icon(Icons.mail_outlined),
@@ -302,6 +369,7 @@
 //                     _hideLoadingDialog();
 
 //                     if (success) {
+//                       await _saveCredentials(id, password); // Save credentials on successful login
 //                       Navigator.pushReplacementNamed(context, '/home');
 //                     } else {
 //                       Vibration.vibrate();
@@ -355,6 +423,7 @@
 //   }
 // }
 
+
 import 'dart:convert';
 import 'package:educonnect_parent_app/constant/app_constant.dart';
 import 'package:educonnect_parent_app/services/auth_service.dart';
@@ -385,6 +454,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   bool _obscurePassword = true;
 
+  // New: To track saved credentials and user name
+  bool hasSavedCredentials = false;
+  String? userFirstName;
+  String? userLastName;
+
   @override
   void initState() {
     super.initState();
@@ -392,7 +466,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _passwordControllerShake =
         AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _loadSavedCredentials(); // Load saved credentials on initialization
+    _loadSavedCredentials();
   }
 
   @override
@@ -404,36 +478,48 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // Load saved email and password from SharedPreferences
+  // Load saved credentials and extract name
   Future<void> _loadSavedCredentials() async {
     final prefs = await SharedPreferences.getInstance();
     final String? savedEmail = prefs.getString('email');
     final String? savedPassword = prefs.getString('password');
 
+    final String userDataJson = prefs.getString('user_data') ?? '{}';
+    final Map<String, dynamic> userData = jsonDecode(userDataJson);
+
     if (mounted) {
       setState(() {
-        if (savedEmail != null && savedEmail.isNotEmpty) {
-          idController.text = savedEmail;
-        }
-        if (savedPassword != null && savedPassword.isNotEmpty) {
-          passwordController.text = savedPassword;
+        hasSavedCredentials = savedEmail != null &&
+            savedEmail.isNotEmpty &&
+            savedPassword != null &&
+            savedPassword.isNotEmpty;
+
+        if (hasSavedCredentials) {
+          idController.text = savedEmail!;
+          passwordController.text = savedPassword!;
+
+          userFirstName = userData['first_name'] ??
+              userData['firstname'] ??
+              userData['name']?.split(' ').first;
+
+          userLastName = userData['last_name'] ??
+              userData['lastname'] ??
+              (userData['name'] != null && userData['name'].toString().contains(' ')
+                  ? userData['name'].toString().split(' ').last
+                  : null);
         }
       });
     }
   }
 
-  // Save email and password to SharedPreferences
+  // Save credentials
   Future<void> _saveCredentials(String email, String password) async {
     final prefs = await SharedPreferences.getInstance();
-    // WARNING: Storing passwords in SharedPreferences is insecure.
-    // For production, use flutter_secure_storage instead.
     await prefs.setString('email', email);
     await prefs.setString('password', password);
-    // Update user_data for compatibility with AccountScreen
     final userData = {
       'email': email,
       'password': password,
-      // Preserve other fields if they exist
       ...?jsonDecode(prefs.getString('user_data') ?? '{}'),
     };
     await prefs.setString('user_data', jsonEncode(userData));
@@ -455,7 +541,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     Navigator.of(context, rootNavigator: true).pop();
   }
 
-  /// Authenticate using fingerprint or face
+  /// Biometric authentication
   Future<void> _authenticateWithBiometrics() async {
     try {
       bool canCheckBiometrics = await auth.canCheckBiometrics;
@@ -471,7 +557,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         return;
       }
 
-      // Get saved credentials
       final prefs = await SharedPreferences.getInstance();
       final String? savedEmail = prefs.getString('email');
       final String? savedPassword = prefs.getString('password');
@@ -496,7 +581,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
       if (authenticated && mounted) {
         _showLoadingDialog();
-        // Use saved credentials to authenticate with AuthService
         final success = await AuthService.login(savedEmail, savedPassword);
         _hideLoadingDialog();
 
@@ -539,21 +623,43 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome message
+              // Welcome message with hand emoji + name below in red and larger font
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
                   children: [
-                    Text(
-                      '👋 Welcome Back!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade900,
-                        fontFamily: AppConstant.fontName,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '👋 Welcome Back!',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade900,
+                            fontFamily: AppConstant.fontName,
+                          ),
+                        ),
+                      ],
                     ),
+                    if (hasSavedCredentials && userFirstName != null && userLastName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$userFirstName $userLastName',
+                              style: TextStyle(
+                                fontSize: 26, // Increased font size
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red.shade800, // Red color
+                                fontFamily: AppConstant.fontName,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -569,7 +675,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
               const SizedBox(height: 10),
 
-              // Parent/Student ID field
+              // Parent Email field
               const Text(
                 'Parent Email',
                 style: TextStyle(fontSize: 16, fontFamily: AppConstant.fontName),
@@ -641,32 +747,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
               const SizedBox(height: 30),
 
-              // Fingerprint Login Button
-              Center(
-                child: InkWell(
-                  onTap: _authenticateWithBiometrics,
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/icons/biometric_login.png',
-                        width: 70,
-                        height: 70,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Login with Fingerprint",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontFamily: AppConstant.fontName,
+              // Fingerprint Login Button - only if credentials saved
+              if (hasSavedCredentials)
+                Center(
+                  child: InkWell(
+                    onTap: _authenticateWithBiometrics,
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/icons/biometric_login.png',
+                          width: 70,
+                          height: 70,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Login with Fingerprint",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontFamily: AppConstant.fontName,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 30),
+              if (hasSavedCredentials) const SizedBox(height: 30),
 
               // Login button
               SizedBox(
@@ -726,7 +833,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     _hideLoadingDialog();
 
                     if (success) {
-                      await _saveCredentials(id, password); // Save credentials on successful login
+                      await _saveCredentials(id, password);
+                      if (mounted) {
+                        setState(() {
+                          hasSavedCredentials = true;
+                        });
+                      }
                       Navigator.pushReplacementNamed(context, '/home');
                     } else {
                       Vibration.vibrate();

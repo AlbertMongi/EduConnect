@@ -100,8 +100,6 @@
 #   #
 #   # For details regarding fonts from package dependencies,
 #   # see https://flutter.dev/to/font-from-package
-
-
 name: educonnect_parent_app
 description: "A new Flutter project."
 publish_to: 'none'
@@ -109,7 +107,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  sdk: ^3.7.2  # Keep as-is if your project requires it; otherwise consider >=3.22.0 <4.0.0 for newer Flutter
 
 dependencies:
   flutter:
@@ -120,8 +118,8 @@ dependencies:
   sleek_circular_slider: ^2.0.1
   http: ^1.3.0
   shared_preferences: ^2.5.3
-  vibration:
-  local_auth:
+  vibration: ^3.1.5          # Added latest version (as of January 2026)
+  local_auth: ^2.3.0         # Pinned to 2.3.0 to match your existing code that uses 'options: const AuthenticationOptions(...)'
   get: ^4.7.2
   carousel_slider: ^5.0.0
   google_fonts: ^6.3.1

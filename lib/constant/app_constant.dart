@@ -1,5 +1,5 @@
 
 class AppConstant {
   static const String appTitle = "EDUCONNECT";
-  static const String fontName = "Inria";
+  static const String fontName = "IBM";
 }

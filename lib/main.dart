@@ -1,6 +1,7 @@
 import 'package:educonnect_parent_app/home.dart';
 import 'package:educonnect_parent_app/ui/onboarding/onboarding_screen.dart';
 import 'package:educonnect_parent_app/ui/splash/splash_screen.dart';
+import 'package:educonnect_parent_app/ui/subscription/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
      home: isFirstLaunch ? OnboardingScreen() : SplashScreen(),
+     //home: SubscriptionScreen(),
       debugShowCheckedModeBanner: false,
      
       routes: {

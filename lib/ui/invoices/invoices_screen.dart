@@ -1,3 +1,4 @@
+// --- SAME IMPORTS ---
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +26,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     fetchPayments();
   }
 
+  // --- SAME API FUNCTIONS ---
+
   Future<void> fetchPayments() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -43,7 +46,6 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       });
     } else {
       setState(() => isLoading = false);
-      print('Failed to load payments');
     }
   }
 
@@ -64,587 +66,423 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       });
     } else {
       setState(() => isLoading = false);
-      print('Failed to load invoices');
     }
   }
 
+  // --- UI HELPERS ---
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case "paid":
-        return Colors.green.shade400;
+        return Colors.green;
       case "partial":
-        return Colors.orange.shade400;
+        return Colors.orange;
       case "unpaid":
-        return Colors.red.shade400;
+        return Colors.red;
       default:
-        return Colors.blue.shade400;
+        return Colors.blueGrey;
     }
   }
 
   String formatDate(String? dateString) {
     if (dateString == null) return "N/A";
     final date = DateTime.parse(dateString);
-    return "${DateFormat('dd/MM/yyyy HH:mm').format(date)}";
+    return DateFormat('dd MMM, yyyy – HH:mm').format(date);
   }
 
+  // ---------- MODERN BOTTOM SHEET ----------
   void showInvoiceDetails(BuildContext context, dynamic invoice) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       backgroundColor: Colors.white,
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Invoice Details',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade900,
-                      fontFamily: AppConstant.fontName,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close_rounded, color: Colors.grey.shade600),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildDetailRow(
-                Icons.payment_rounded,
-                'Status',
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder:
+          (_) => _buildBottomSheet(
+            title: "Invoice Details",
+            color: Colors.blue.shade900,
+            rows: [
+              _sheetRow(
+                Icons.payment,
+                "Status",
                 invoice['payment_status'].toUpperCase(),
                 color: getStatusColor(invoice['payment_status']),
               ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.attach_money_rounded,
-                'Due Amount',
-                'TZS ${formatNumber(invoice['due_amount'])}',
+              _sheetRow(
+                Icons.money,
+                "Due Amount",
+                "TSh ${formatNumber(invoice['due_amount'])}",
               ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.money_off_rounded,
-                'Paid Amount',
-                'TSh ${formatNumber(invoice['paid_amount'])}',
+              _sheetRow(
+                Icons.receipt,
+                "Control Number",
+                invoice['control_number'].toString(),
               ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.confirmation_number_rounded,
-                'Control Number',
-                '${invoice['control_number']}',
-              ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.calendar_today_rounded,
-                'Issue Date',
+              _sheetRow(
+                Icons.calendar_today,
+                "Issued On",
                 formatDate(invoice['created_at']),
               ),
             ],
           ),
-        );
-      },
     );
   }
 
   void showPaymentDetails(BuildContext context, dynamic payment) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       backgroundColor: Colors.white,
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Payment Details',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade900,
-                      fontFamily: AppConstant.fontName,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close_rounded, color: Colors.grey.shade600),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder:
+          (_) => _buildBottomSheet(
+            title: "Payment Details",
+            color: Colors.green.shade800,
+            rows: [
+              _sheetRow(
+                Icons.monetization_on,
+                "Amount Paid",
+                "TSh ${formatNumber(payment['amount_paid'])}",
+                color: Colors.green,
               ),
-              const SizedBox(height: 16),
-              _buildDetailRow(
-                Icons.monetization_on_rounded,
-                'Amount Paid',
-                'TSh ${formatNumber(payment['amount_paid'])}',
-                color: Colors.green.shade400,
+              _sheetRow(
+                Icons.receipt_long,
+                "Bank Ref",
+                payment['bank_ref'].toString(),
               ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.receipt_rounded,
-                'Bank Reference',
-                '${payment['bank_ref']}',
+              _sheetRow(
+                Icons.confirmation_number,
+                "Control Number",
+                payment['control_number'].toString(),
               ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.confirmation_number_rounded,
-                'Control Number',
-                '${payment['control_number']}',
-              ),
-              Divider(height: 24, color: Colors.grey[200]),
-              _buildDetailRow(
-                Icons.calendar_today_rounded,
-                'Payment Date',
+              _sheetRow(
+                Icons.calendar_today,
+                "Paid On",
                 formatDate(payment['created_at']),
               ),
             ],
           ),
-        );
-      },
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, {Color? color}) {
-    return Row(
-      children: [
-        Icon(icon, color: color ?? Colors.blue.shade400, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                  fontFamily: AppConstant.fontName,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: color ?? Colors.black87,
-                  fontFamily: AppConstant.fontName,
-                ),
-              ),
-            ],
+  Widget _buildBottomSheet({
+    required String title,
+    required Color color,
+    required List<Widget> rows,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 45,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 18),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontFamily: AppConstant.fontName,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ...rows,
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
+
+  Widget _sheetRow(IconData icon, String label, String value, {Color? color}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: (color ?? Colors.blue).withOpacity(.15),
+            child: Icon(icon, color: color ?? Colors.blue),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontFamily: AppConstant.fontName,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    fontFamily: AppConstant.fontName,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- MODERN MAIN UI -------------------
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
+        elevation: 0,
         backgroundColor: Colors.white,
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
         centerTitle: true,
         title: Text(
-          'Fees & Payments',
+          "Fees & Payments",
           style: TextStyle(
             color: Colors.blue.shade900,
             fontSize: 20,
+            fontWeight: FontWeight.w700,
             fontFamily: AppConstant.fontName,
-            fontWeight: FontWeight.w600,
           ),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
-          : SingleChildScrollView(
+
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildBalanceCard(),
+
+                    const SizedBox(height: 25),
+                    _sectionHeader("Recent Payments"),
+                    _buildPaymentList(),
+
+                    const SizedBox(height: 25),
+                    _sectionHeader("Invoices"),
+                    _buildInvoiceList(),
+                  ],
+                ),
+              ),
+    );
+  }
+
+  // -------------------------------------------------------
+  // -------------------- UI SECTIONS -----------------------
+  // -------------------------------------------------------
+
+  Widget _buildBalanceCard() {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          colors: [Colors.indigo.shade700, Colors.indigo.shade400],
+        ),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 15,
+            color: Colors.indigo.withOpacity(0.3),
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _balanceText("Paid Balance", Colors.white70),
+          Text(
+            "TSh ${formatNumber(payments.fold(0, (s, p) => s + int.parse(p['amount_paid'].toString())))}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              fontWeight: FontWeight.bold,
+              fontFamily: AppConstant.fontName,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _balanceText("Unpaid Balance", Colors.white70),
+          Text(
+            "TSh ${formatNumber(outstandingBalance.toStringAsFixed(0))}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              fontWeight: FontWeight.bold,
+              fontFamily: AppConstant.fontName,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Make payment via NBC Kiganjani, Wakala, or any NBC branch.",
+            style: TextStyle(color: Colors.white70, fontSize: 13, fontFamily: AppConstant.fontName),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _balanceText(String text, Color color) => Text(
+    text,
+    style: TextStyle(
+      color: color,
+      fontSize: 16,
+      fontFamily: AppConstant.fontName,
+      fontWeight: FontWeight.w400,
+    ),
+  );
+
+  Widget _sectionHeader(String title) => Align(
+    alignment: Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade800,
+          fontFamily: AppConstant.fontName,
+        ),
+      ),
+    ),
+  );
+
+  // ------------------ LIST WIDGETS ---------------------
+
+  Widget _buildPaymentList() {
+    return Column(
+      children:
+          payments.map((payment) {
+            return _modernCard(
+              color: Colors.green,
+              title: "TSh ${formatNumber(payment['amount_paid'])}",
+              subtitle: formatDate(payment['created_at']),
+              onTap: () => showPaymentDetails(context, payment),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildInvoiceList() {
+    return Column(
+      children:
+          invoices.map((inv) {
+            return _modernCard(
+              color: getStatusColor(inv['payment_status']),
+              title: "TSh ${formatNumber(inv['due_amount'])}",
+              subtitle: formatDate(inv['created_at']),
+              badge: inv['payment_status'].toUpperCase(),
+              onTap: () => showInvoiceDetails(context, inv),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _modernCard({
+    required Color color,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    String? badge,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 10,
+              color: Colors.black12.withOpacity(0.06),
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withOpacity(.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.receipt_long, color: color),
+            ),
+            const SizedBox(width: 16),
+
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Filter and Search
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.filter_list_rounded, size: 20, color: Colors.black87),
-                          label: const Text("Filter"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[100],
-                            foregroundColor: Colors.black87,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: "Search transactions...",
-                              hintStyle: TextStyle(color: Colors.grey[500], fontFamily: AppConstant.fontName),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              prefixIcon: Icon(Icons.search_rounded, color: Colors.blue.shade400),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey,
                     ),
                   ),
-
-                  // Balance Container
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.red.shade700, Colors.red.shade400],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.shade200.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Paid Balance',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                        fontFamily: AppConstant.fontName,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'TSh ${formatNumber(payments.fold<num>(0, (sum, p) => sum + num.tryParse(p['amount_paid'].toString())!))}',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: AppConstant.fontName,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                            Icons.money,
-                                color: Colors.white70,
-                                size: 40,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          CustomPaint(
-                            size: Size(double.infinity, 1),
-                            painter: DashedLinePainter(),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Unpaid Balance',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                        fontFamily: AppConstant.fontName,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'TSh ${formatNumber(outstandingBalance.toStringAsFixed(0))}',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: AppConstant.fontName,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Pay via NBC Kiganjani App, Wakala, or NBC Branch',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 12,
-                                        fontFamily: AppConstant.fontName,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.account_balance_wallet_rounded,
-                                color: Colors.white70,
-                                size: 40,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Simplified Payments List
-                  ListView.builder(
-                    itemCount: payments.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemBuilder: (context, index) {
-                      final payment = payments[index];
-                      return GestureDetector(
-                        onTap: () => showPaymentDetails(context, payment),
-                        child: Card(
-                          elevation: 3,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade400,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.monetization_on_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            title: Text(
-                              'TSh ${formatNumber(payment['amount_paid'])}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.green.shade900,
-                                fontFamily: AppConstant.fontName,
-                              ),
-                            ),
-                            subtitle: Text(
-                              formatDate(payment['created_at']),
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                                fontFamily: AppConstant.fontName,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.visibility_rounded,
-                                  color: Colors.green.shade400,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'View',
-                                  style: TextStyle(
-                                    color: Colors.green.shade400,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: AppConstant.fontName,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Simplified Invoices List
-                  ListView.builder(
-                    itemCount: invoices.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemBuilder: (context, index) {
-                      final invoice = invoices[index];
-                      return GestureDetector(
-                        onTap: () => showInvoiceDetails(context, invoice),
-                        child: Card(
-                          elevation: 3,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: Container(
-                              width: 60,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    getStatusColor(invoice['payment_status']),
-                                    getStatusColor(invoice['payment_status']).withOpacity(0.7),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                invoice['payment_status'].toUpperCase(),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  fontFamily: AppConstant.fontName,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            title: Text(
-                              'TZS ${formatNumber(invoice['due_amount'])}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.blue.shade900,
-                                fontFamily: AppConstant.fontName,
-                              ),
-                            ),
-                            subtitle: Text(
-                              formatDate(invoice['created_at']),
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                                fontFamily: AppConstant.fontName,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.visibility_rounded,
-                                  color: Colors.blue.shade400,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'View',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade400,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: AppConstant.fontName,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  // Bottom Loader
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.blue,
-                        strokeWidth: 2,
-                      ),
-                    ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
+
+            if (badge != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badge,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class DashedLinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white70
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    const dashWidth = 5;
-    const dashSpace = 5;
-    double startX = 0;
-
-    while (startX < size.width) {
-      canvas.drawLine(
-        Offset(startX, 0),
-        Offset(startX + dashWidth, 0),
-        paint,
-      );
-      startX += dashWidth + dashSpace;
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
-
 String formatNumber(dynamic number) {
-  final numericValue = num.tryParse(number.toString()) ?? 0;
-  final formatter = NumberFormat('#,##0');
-  return formatter.format(numericValue);
+  final numericValue = num.tryParse(number.toString().replaceAll(",", "")) ?? 0;
+  return NumberFormat('#,##0').format(numericValue);
 }

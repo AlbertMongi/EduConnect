@@ -690,7 +690,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       controller: idController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        hintText: 'example@email.com',
+                        hintText: 'email@email.com',
                         prefixIcon: const Icon(Icons.mail_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

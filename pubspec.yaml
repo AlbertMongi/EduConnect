@@ -140,9 +140,9 @@ flutter:
     - assets/svg/
 
   fonts:
-    - family: Inria
+    - family: IBM
       fonts:
-        - asset: assets/fonts/Inria.ttf
+        - asset: assets/fonts/IBM.ttf
 
 # 🚀 Flutter Launcher Icons Configuration
 flutter_launcher_icons:

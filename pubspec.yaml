@@ -104,7 +104,7 @@ name: educonnect_parent_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 2.0.0+2
 
 environment:
   sdk: ^3.7.2  # Keep as-is if your project requires it; otherwise consider >=3.22.0 <4.0.0 for newer Flutter

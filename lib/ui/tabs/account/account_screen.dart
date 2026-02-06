@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:educonnect_parent_app/constant/app_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +41,10 @@ class _AccountScreenState extends State<AccountScreen> {
 
       final response = await http.get(
         Uri.parse('https://nbc-educonnect.co.tz/api/parents/MyStudent'),
-        headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -48,7 +52,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
         if (data['success'] == true) {
           setState(() {
-            studentName = "${data['student']['first_name']} ${data['student']['last_name']}";
+            studentName =
+                "${data['student']['first_name']} ${data['student']['last_name']}";
             className = data['student']['class_name'];
             schoolName = data['student']['school_name'];
             admissionId = data['student']['admission_id'] ?? 'N/A';
@@ -120,6 +125,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
+                fontFamily: AppConstant.fontName,
               ),
             ),
           ),
@@ -160,6 +166,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       fontSize: 22,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontFamily: AppConstant.fontName,
                     ),
                   ),
                   Text(
@@ -167,6 +174,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     style: const TextStyle(
                       fontSize: 15,
                       color: Colors.white70,
+                      fontFamily: AppConstant.fontName,
                     ),
                   ),
                 ],
@@ -180,13 +188,19 @@ class _AccountScreenState extends State<AccountScreen> {
             // -------------------------------
             _sectionTitle("Student Details"),
 
-            _glassCard(children: [
-              _infoRow(Icons.person, "Student Name", studentName),
-              _infoRow(Icons.confirmation_num, "Registration No.", admissionId),
-              _infoRow(Icons.class_, "Class", className),
-              _infoRow(Icons.school, "School", schoolName),
-              _infoRow(Icons.male, "Gender", gender),
-            ]),
+            _glassCard(
+              children: [
+                _infoRow(Icons.person, "Student Name", studentName),
+                _infoRow(
+                  Icons.confirmation_num,
+                  "Registration No.",
+                  admissionId,
+                ),
+                _infoRow(Icons.class_, "Class", className),
+                _infoRow(Icons.school, "School", schoolName),
+                _infoRow(Icons.male, "Gender", gender),
+              ],
+            ),
 
             const SizedBox(height: 28),
 
@@ -195,12 +209,14 @@ class _AccountScreenState extends State<AccountScreen> {
             // -------------------------------
             _sectionTitle("Parent / Guardian Details"),
 
-            _glassCard(children: [
-              _infoRow(Icons.person_pin, "Parent Name", parentName),
-              _infoRow(Icons.phone, "Mobile Number", parentPhone),
-              _infoRow(Icons.email, "Email", parentEmail),
-              _infoRow(Icons.calendar_today, "Join Date", parentJoinDate),
-            ]),
+            _glassCard(
+              children: [
+                _infoRow(Icons.person_pin, "Parent Name", parentName),
+                _infoRow(Icons.phone, "Mobile Number", parentPhone),
+                _infoRow(Icons.email, "Email", parentEmail),
+                _infoRow(Icons.calendar_today, "Join Date", parentJoinDate),
+              ],
+            ),
 
             const SizedBox(height: 50),
           ],
@@ -222,6 +238,7 @@ class _AccountScreenState extends State<AccountScreen> {
             fontSize: 19,
             fontWeight: FontWeight.w700,
             color: Colors.blue.shade900,
+            fontFamily: AppConstant.fontName,
           ),
         ),
       ),
@@ -240,7 +257,7 @@ class _AccountScreenState extends State<AccountScreen> {
             color: Colors.black12.withOpacity(.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(children: children),
@@ -263,9 +280,14 @@ class _AccountScreenState extends State<AccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style:
-                        TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    fontFamily: AppConstant.fontName,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   value,
@@ -273,11 +295,12 @@ class _AccountScreenState extends State<AccountScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
+                    fontFamily: AppConstant.fontName,
                   ),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

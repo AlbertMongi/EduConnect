@@ -32,11 +32,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## flutter_secure_storage
+## flutter_secure_storage_darwin
 
 BSD 3-Clause License
 
-Copyright 2017 German Saprykin
+Copyright 2025 Julian Steenbakker
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

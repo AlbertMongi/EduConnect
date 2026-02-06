@@ -10,8 +10,7 @@
 #endif
 #endif
 
-#import "FlutterSecureStoragePlugin.h"
 
-FOUNDATION_EXPORT double flutter_secure_storageVersionNumber;
-FOUNDATION_EXPORT const unsigned char flutter_secure_storageVersionString[];
+FOUNDATION_EXPORT double flutter_secure_storage_darwinVersionNumber;
+FOUNDATION_EXPORT const unsigned char flutter_secure_storage_darwinVersionString[];
 

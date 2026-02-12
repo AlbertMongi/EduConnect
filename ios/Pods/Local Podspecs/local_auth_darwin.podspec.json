@@ -18,12 +18,16 @@
   "source_files": "local_auth_darwin/Sources/local_auth_darwin/**/*.swift",
   "ios": {
     "dependencies": {
-      "Flutter": []
+      "Flutter": [
+
+      ]
     }
   },
   "osx": {
     "dependencies": {
-      "FlutterMacOS": []
+      "FlutterMacOS": [
+
+      ]
     }
   },
   "platforms": {

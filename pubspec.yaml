@@ -104,7 +104,7 @@ name: educonnect_parent_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 4.0.0+4
+version: 5.0.0+5
 
 environment:
   sdk: ^3.7.2  # Keep as-is if your project requires it; otherwise consider >=3.22.0 <4.0.0 for newer Flutter
@@ -143,9 +143,9 @@ flutter:
     - assets/svg/
 
   fonts:
-    - family: IBM
+    - family: VisbyRegular
       fonts:
-        - asset: assets/fonts/IBM.ttf
+        - asset: assets/fonts/VisbyRegular.otf
 
 # 🚀 Flutter Launcher Icons Configuration
 flutter_launcher_icons:

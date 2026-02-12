@@ -16,12 +16,16 @@
   "source_files": "flutter_secure_storage_darwin/Sources/flutter_secure_storage_darwin/**/*.swift",
   "ios": {
     "dependencies": {
-      "Flutter": []
+      "Flutter": [
+
+      ]
     }
   },
   "osx": {
     "dependencies": {
-      "FlutterMacOS": []
+      "FlutterMacOS": [
+
+      ]
     }
   },
   "platforms": {

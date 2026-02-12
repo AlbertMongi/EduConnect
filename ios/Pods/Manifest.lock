@@ -37,13 +37,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/vibration/ios"
 
 SPEC CHECKSUMS:
-  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
-  local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
-  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
-  vibration: ca8104a8875b9c493e15b21b04e456befd0ff6eb
+  flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
+  local_auth_darwin: 63c73d6d28cc3e239be2b6aa460ea6e317cd5100
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  vibration: 8e4d81c3e73ab229a9fb5ab2692f789c4a46d74d
 
-PODFILE CHECKSUM: 7cff9dc2fd5097f0ba010b45b3cd49b35afc03b0
+PODFILE CHECKSUM: b8947cfdc7ec4dc9d7a918638f8633c739104ec6
 
 COCOAPODS: 1.16.2

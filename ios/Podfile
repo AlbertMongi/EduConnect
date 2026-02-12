@@ -1,7 +1,5 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '13.0'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -20,7 +18,7 @@ def flutter_root
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
     return matches[1].strip if matches
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  raise "FLUTTER_ROOT not found"
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
@@ -28,7 +26,7 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
+  use_frameworks! :linkage => :static
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
@@ -37,18 +35,13 @@ target 'Runner' do
   end
 end
 
-# 🔥 FIX: FORCE ALL PODS TO GENERATE dSYMs
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-    # Keep Flutter defaults
     flutter_additional_ios_build_settings(target)
 
-    # Force dSYM generation for every Pod (including objective_c.framework)
     target.build_configurations.each do |config|
       config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
-      config.build_settings['STRIP_DEBUG_SYMBOLS'] = 'NO'
-      config.build_settings['STRIP_SWIFT_SYMBOLS'] = 'NO'
-      config.build_settings['COPY_PHASE_STRIP'] = 'NO'
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
     end
   end
 end
